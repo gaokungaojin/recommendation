@@ -7,6 +7,8 @@ from pyspark import SparkContext
 
 #from pagerank.simple_page_rank import SimplePageRank
 #from pagerank.backedges_page_rank import BackedgesPageRank
+
+
 def MatrixSplit(a):
 	sp= a.split(": ")
 	return (sp[0], sp[1])
@@ -39,7 +41,17 @@ def userSplit(a):
 	return (sp[1], int (sp[2]))
 
 
-			
+def userRank(a):
+	if(a[1]>100 or a[1]< 30):
+		return (a[0], 0 )
+	elif (a[1]>=30 and a[1]<60):
+		return (a[0], 2)
+	elif (a[1]>=60 and a[1]< 80):
+		return (a[0], 5)
+	elif (a[1]>=80 and a[1]<90):
+		return (a[0], 8)
+	elif (a[1]>=90 and a[1]<=100):
+		return (a[0], 10)
 
 
 
@@ -56,18 +68,27 @@ if  __name__ == "__main__":
         except:
             print ("fail")
             sys.exit(0)
-        input_u1= input_udd.map(userSplit).filter(lambda x: x[1]!=0)
+        input_uBF= input_udd.map(userSplit).map(userRank)
+        input_uF= input_uBF.filter(lambda x: x[1]!=0)
         ################# PRINT OUT THE USER VECT
-        #input_u1.coalesce(1).saveAsTextFile(sys.argv[3])
-        keys = input_u1.keys().collect()
-        values = input_u1.values().collect()
+        #input_uBF.coalesce(1).saveAsTextFile(sys.argv[3])
+
+        # Collecting user key before filtering
+        keys_BF = input_uBF.keys().collect()
+        # Collecting user key after filtering
+        keys = input_uF.keys().collect()
+        # Collecting user value afoter filtering 
+        values = input_uF.values().collect()
         input_v1= input_rdd.map(MatrixSplit).filter(lambda x: x[0] in keys).map(flat_matrix).map(factor_map).map(map1).flatMap(map2)
-        input_v2= input_v1.reduceByKey(lambda x, y: x+y).filter(lambda x: x[0] not in keys).takeOrdered(20, key=lambda x: -x[1])
+        
+       # calculate user recom verctor
+        input_v2= input_v1.reduceByKey(lambda x, y: x+y).filter(lambda x: x[0] not in keys_BF).takeOrdered(20, key=lambda x: -x[1])
+        
+        
         ################# PRINT OUT THE RESULT
-        #input_v1.coalesce(1).saveAsTextFile(sys.argv[4])
-        #input_v2.coalesce(1).saveAsTextFile(sys.argv[4])
+
        	for i in input_v2:
-       		print (i)
+       		print (str (i[0])+"\t"+str (i[1]))
 
 	sc.stop()
-	print("--- %s seconds ---" % (time.time() - start_time))
+	#print("--- %s seconds ---" % (time.time() - start_time))
