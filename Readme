@@ -3,3 +3,12 @@ spark-submit run_recom.py Matrix UserVector > output
 
 How to run run_matrix.py:
 spark-submit run_matrix.py RawData Output_directory
+
+There is a python file RECOM.py that can run run_recom.py and mergeRecom.py sequently
+
+how to run RECOM.py:    (make sure you have 8 recommendation matrixs file in the current directory)
+                        (make sure run_recom.py and mergeRecom.py us in the current direcotry)
+
+python RECOM.py user_vector 
+
+final result will be stored in Final_Recomm file
